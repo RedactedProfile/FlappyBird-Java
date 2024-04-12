@@ -23,7 +23,7 @@ import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
  * ✔️ Background needs to infinitely scroll too
  * ✔️ Bird debug move around mode
  * ✔️ collision detection for death state
- * let's then make the bird fall
+ * ✔️ let's then make the bird fall
  * get some input in to jump the bird up
  * Make things smoother (rotate bird)
  * "Start menu"
@@ -52,6 +52,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	float pipeGapSize = 100f;
 
 	Sprite player;
+	float playerVelocity = 0;
+	float getPlayerVelocityFactor = 980;
 
 
 	boolean cheat_freemove = true; // disables gravity, enables WASD movement
@@ -220,6 +222,11 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			} else if (iRight) {
 				newX += moveBy;
 			}
+		} else {
+			// "Gravity" Mode
+
+			playerVelocity += -getPlayerVelocityFactor * delta;
+			newY += playerVelocity * delta;
 		}
 
 		player.setPosition(newX, newY);
