@@ -16,12 +16,13 @@ import java.util.Random;
  * Plan:
  * 1. ✔️ we should get the infinitely scrolling floor first
  * 2. ✔️ let's infinitely spawn some pipe pairs
- * 3. let's then make the bird fall
- * 4. get some input in to jump the bird up
- * 5. Make things smoother (rotate bird)
- * 6. "Start menu"
- * 7. "Game over"
- * 8. Counter
+ * 3. ✔️ Background needs to infinitely scroll too
+ * 4. let's then make the bird fall
+ * 5. get some input in to jump the bird up
+ * 6. Make things smoother (rotate bird)
+ * 7. "Start menu"
+ * 8. "Game over"
+ * 9. Counter
  */
 
 
@@ -38,6 +39,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 
 	ArrayList<Float> floorOffsets = new ArrayList<>();
+	ArrayList<Float> bgOffsets = new ArrayList<>();
 	ArrayList<Float[]> pipeOffsets = new ArrayList<>();
 	float pipeSpawnTimer = 0;
 
@@ -50,9 +52,13 @@ public class MyGdxGame extends ApplicationAdapter {
 		greenPipeHigh = new Sprite(new Texture("sprites/pipe-green.png")); greenPipeHigh.flip(false, true);
 		greenPipeLow = new Sprite(new Texture("sprites/pipe-green.png"));
 
-		floorOffsets.add(0f);
-		floorOffsets.add(floorSprite.getWidth());
-		floorOffsets.add(floorSprite.getWidth() * 2);
+		for (int i = 0; i < 3; i++) {
+			floorOffsets.add(floorSprite.getWidth() * i);
+		}
+
+		for (int i = 0; i < 4; i++) {
+			bgOffsets.add(backgroundSprite.getWidth() * i);
+		}
 
 		bird = new Bird();
 	}
@@ -65,12 +71,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		ScreenUtils.clear(0, 0, 0.75f, 1);
 		batch.begin();
 
-		batch.draw(backgroundSprite, 0, 0);
+		// Draw the background first
+		for (float bgOffset : bgOffsets) {
+			batch.draw(backgroundSprite, bgOffset, 0);
+		}
 
+		// Draw the ground on top
 		for (float floorOffset : floorOffsets) {
 			batch.draw(floorSprite, floorOffset, 0);
 		}
 
+		// Draw the pipes
 		float gapSize = 100f;
 		for (Float[] pipeOffset : pipeOffsets) {
 			// offset starts by rendering the pipe at the top of the screen (screen height - pipe height)
@@ -86,8 +97,10 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.draw(greenPipeLow, pipeOffset[0], offset - greenPipeLow.getHeight() - gapSize);
 		}
 
+		// Draw the bird
 		bird.Render(batch);
 
+		// Send it home
 		batch.end();
 	}
 
@@ -103,9 +116,18 @@ public class MyGdxGame extends ApplicationAdapter {
         floorOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
 		if(floorOffsets.get(0) <= -floorSprite.getWidth()) {
 //			System.out.println("floor cycle");
-			floorOffsets.set(0, 0f);
-			floorOffsets.set(1, floorSprite.getWidth());
-			floorOffsets.set(2, floorSprite.getWidth() * 2);
+			for (int i = 0; i < 3; i++) {
+				floorOffsets.set(i, floorSprite.getWidth() * i);
+			}
+		}
+
+		// update bg positions
+		bgOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
+		if(bgOffsets.get(0) <= -backgroundSprite.getWidth()) {
+//			System.out.println("bg cycle");
+			for (int i = 0; i < 4; i++) {
+				bgOffsets.set(i, backgroundSprite.getWidth() * i);
+			}
 		}
 
 		// Update pipe positions
