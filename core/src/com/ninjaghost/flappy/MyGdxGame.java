@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.sun.org.slf4j.internal.Logger;
 
 import java.util.ArrayList;
 
@@ -77,6 +78,12 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		// update floor position
         floorOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
+		if(floorOffsets.get(0) <= -floorSprite.getWidth()) {
+//			System.out.println("floor cycle");
+			floorOffsets.set(0, 0f);
+			floorOffsets.set(1, floorSprite.getWidth());
+			floorOffsets.set(2, floorSprite.getWidth() * 2);
+		}
 
 		bird.Update(delta);
 	}
