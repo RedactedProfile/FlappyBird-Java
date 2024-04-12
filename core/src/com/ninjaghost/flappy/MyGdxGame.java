@@ -66,9 +66,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	boolean playerDead = false;
 
 
-	boolean cheat_freemove = true; // disables gravity, enables WASD movement
+	boolean cheat_freemove = false; // disables gravity, enables WASD movement
 	boolean cheat_noclip = false; // when enabled, disables collision
-	boolean cheat_drawboxes = true; // when enabled draws the bounding boxes
+	boolean cheat_drawboxes = false; // when enabled draws the bounding boxes
 
 	// input state
 	boolean iUp = false;
