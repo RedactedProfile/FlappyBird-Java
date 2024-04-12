@@ -25,6 +25,8 @@ import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
  * ✔️ collision detection for death state
  * ✔️ let's then make the bird fall
  * ✔️ get some input in to jump the bird up
+ * ✔️ Collision triggers death state
+ * Able to respawn after death
  * Make things smoother (rotate bird)
  * "Start menu"
  * "Game over"
