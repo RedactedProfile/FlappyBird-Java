@@ -55,6 +55,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	float playerVelocity = 0;
 	float getPlayerVelocityFactor = 980;
 	float playerJumpStrength = 250;
+	boolean playerDead = false;
 
 
 	boolean cheat_freemove = true; // disables gravity, enables WASD movement
@@ -147,6 +148,11 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	public void update (float delta) {
 		deathBoxes.clear(); // empty the death boxes
 
+		if(playerDead) {
+			// don't do anything
+			return;
+		}
+
 		pipeSpawnTimer += delta;
 
 		if(pipeSpawnTimer > 5) {
@@ -238,6 +244,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			for (Rectangle bbox : deathBoxes) {
 				if (bbox.overlaps(player.getBoundingRectangle())) {
 					System.out.println("Collision");
+					playerDead = true;
 				}
 			}
 		}
@@ -282,6 +289,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			case com.badlogic.gdx.Input.Keys.D:
 				iRight = true;
 				break;
+			case com.badlogic.gdx.Input.Keys.SPACE:
+				playerVelocity = playerJumpStrength;
+				break;
 		}
 
 		return true;
@@ -311,9 +321,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			case com.badlogic.gdx.Input.Keys.L:
 				cheat_drawboxes = !cheat_drawboxes;
 				break;
-			case com.badlogic.gdx.Input.Keys.SPACE:
-				playerVelocity = playerJumpStrength;
-				break;
+
 		}
 		return true;
 	}
