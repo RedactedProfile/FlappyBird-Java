@@ -24,7 +24,7 @@ import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
  * ✔️ Bird debug move around mode
  * ✔️ collision detection for death state
  * ✔️ let's then make the bird fall
- * get some input in to jump the bird up
+ * ✔️ get some input in to jump the bird up
  * Make things smoother (rotate bird)
  * "Start menu"
  * "Game over"
@@ -54,6 +54,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	Sprite player;
 	float playerVelocity = 0;
 	float getPlayerVelocityFactor = 980;
+	float playerJumpStrength = 250;
 
 
 	boolean cheat_freemove = true; // disables gravity, enables WASD movement
@@ -309,6 +310,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				break;
 			case com.badlogic.gdx.Input.Keys.L:
 				cheat_drawboxes = !cheat_drawboxes;
+				break;
+			case com.badlogic.gdx.Input.Keys.SPACE:
+				playerVelocity = playerJumpStrength;
 				break;
 		}
 		return true;
