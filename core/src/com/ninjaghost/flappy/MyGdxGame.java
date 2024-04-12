@@ -10,12 +10,9 @@ import com.badlogic.gdx.utils.ScreenUtils;
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
 
-	Texture background;
-	Texture floor;
 	Sprite backgroundSprite;
 	Sprite floorSprite;
 
-	Texture greenPipe;
 	Sprite greenPipeHigh;
 	Sprite greenPipeLow;
 
@@ -26,13 +23,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	public void create () {
 		batch = new SpriteBatch();
 
-		background = new Texture("sprites/background-day.png");
-		backgroundSprite = new Sprite(background);
-		floor = new Texture("sprites/base.png");
-		floorSprite = new Sprite(floor);
-		greenPipe = new Texture("sprites/pipe-green.png");
-		greenPipeHigh = new Sprite(greenPipe);
-		greenPipeLow = new Sprite(greenPipe); greenPipeLow.flip(false, true);
+		backgroundSprite = new Sprite(new Texture("sprites/background-day.png"));
+		floorSprite = new Sprite(new Texture("sprites/base.png"));
+		greenPipeHigh = new Sprite(new Texture("sprites/pipe-green.png"));
+		greenPipeLow = new Sprite(new Texture("sprites/pipe-green.png")); greenPipeLow.flip(false, true);
 
 		bird = new Bird();
 	}
@@ -62,9 +56,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	public void dispose () {
 		batch.dispose();
 		bird.dispose();
-		background.dispose();
-		floor.dispose();
-		greenPipe.dispose();
+		backgroundSprite.getTexture().dispose();
+		floorSprite.getTexture().dispose();
+		greenPipeHigh.getTexture().dispose();
+		greenPipeLow.getTexture().dispose();
 	}
 
 
