@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -12,6 +13,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.utils.ScreenUtils;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
@@ -26,11 +28,11 @@ import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
  * ✔️ let's then make the bird fall
  * ✔️ get some input in to jump the bird up
  * ✔️ Collision triggers death state
- * Able to respawn after death
- * Make things smoother (rotate bird)
+ * ✔️ Able to respawn after death
  * "Start menu"
  * "Game over"
  * Counter
+ * Make things smoother (rotate bird)
  * Make Exe
  */
 
@@ -77,10 +79,14 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	boolean iRight = false;
 	boolean iSpace = false;
 
+	// UI stuff
+	BitmapFont font;
+
 	@Override
 	public void create () {
 		Gdx.input.setInputProcessor(this);
 		batch = new SpriteBatch();
+		font = new BitmapFont();
 
 		backgroundSprite = new Sprite(new Texture("sprites/background-day.png"));
 		floorSprite = new Sprite(new Texture("sprites/base.png"));
@@ -161,6 +167,21 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			}
 			shapeRenderer.end();
 		}
+
+
+		// UI goes on top of everything else so it must be rendered last
+		batch.begin();
+		font.getData().setScale(1.2f);
+
+		// Show activated cheats
+		List<String> cheats = new ArrayList<>();
+		if(cheat_freemove) cheats.add(" FreeMove");
+		if(cheat_noclip) cheats.add(" NoClip");
+		if(cheat_drawboxes) cheats.add(" BBoxes");
+		if(!cheats.isEmpty())
+			font.draw(batch, "Cheats:\n" + String.join("\n", cheats), Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
+		batch.end();
+
 	}
 
 	public void update (float delta) {
