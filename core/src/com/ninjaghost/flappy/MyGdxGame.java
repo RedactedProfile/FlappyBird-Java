@@ -294,6 +294,15 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			case com.badlogic.gdx.Input.Keys.D:
 				iRight = false;
 				break;
+			case com.badlogic.gdx.Input.Keys.J:
+				cheat_freemove = !cheat_freemove;
+				break;
+			case com.badlogic.gdx.Input.Keys.K:
+				cheat_noclip = !cheat_noclip;
+				break;
+			case com.badlogic.gdx.Input.Keys.L:
+				cheat_drawboxes = !cheat_drawboxes;
+				break;
 		}
 		return true;
 	}
