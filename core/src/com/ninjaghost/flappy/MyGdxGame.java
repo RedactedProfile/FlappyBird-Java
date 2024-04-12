@@ -51,6 +51,10 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 	Sprite player;
 
+
+	boolean cheat_freemove = true; // disables gravity, enables WASD movement
+	boolean cheat_noclip = false; // when enabled, disables collision
+
 	// input state
 	boolean iUp = false;
 	boolean iDown = false;
@@ -185,23 +189,31 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		float newX = player.getX();
 		float newY = player.getY();
-		float moveBy = 50f * delta;
-		if(iUp) {
-			newY += moveBy;
-		} else if (iDown) {
-			newY -= moveBy;
+
+		if(cheat_freemove) {
+			// FreeMove Mode disables gravity and lets the player move around with WASD. Useful for debugging collision detection.
+			float moveBy = 50f * delta;
+			if (iUp) {
+				newY += moveBy;
+			} else if (iDown) {
+				newY -= moveBy;
+			}
+			if (iLeft) {
+				newX -= moveBy;
+			} else if (iRight) {
+				newX += moveBy;
+			}
 		}
-		if(iLeft) {
-			newX -= moveBy;
-		} else if(iRight) {
-			newX += moveBy;
-		}
+
 		player.setPosition(newX, newY);
 
-		// collision detection
-		for (Rectangle bbox : deathBoxes) {
-			if(bbox.overlaps(player.getBoundingRectangle())) {
-				System.out.println("Collision");
+		if(!cheat_noclip) {
+			// NoClip Mode disables collision
+			// collision detection
+			for (Rectangle bbox : deathBoxes) {
+				if (bbox.overlaps(player.getBoundingRectangle())) {
+					System.out.println("Collision");
+				}
 			}
 		}
 	}
