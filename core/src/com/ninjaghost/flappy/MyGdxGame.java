@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.sun.org.slf4j.internal.Logger;
+import com.sun.tools.javac.util.Pair;
 
 import java.util.ArrayList;
 
@@ -36,6 +37,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 
 	ArrayList<Float> floorOffsets = new ArrayList<>();
+	ArrayList<Float[]> pipeOffsets = new ArrayList<>();
+	float pipeSpawnTimer = 0;
 
 	@Override
 	public void create () {
@@ -43,8 +46,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		backgroundSprite = new Sprite(new Texture("sprites/background-day.png"));
 		floorSprite = new Sprite(new Texture("sprites/base.png"));
-		greenPipeHigh = new Sprite(new Texture("sprites/pipe-green.png"));
-		greenPipeLow = new Sprite(new Texture("sprites/pipe-green.png")); greenPipeLow.flip(false, true);
+		greenPipeHigh = new Sprite(new Texture("sprites/pipe-green.png")); greenPipeHigh.flip(false, true);
+		greenPipeLow = new Sprite(new Texture("sprites/pipe-green.png"));
 
 		floorOffsets.add(0f);
 		floorOffsets.add(floorSprite.getWidth());
@@ -66,8 +69,11 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.draw(floorSprite, floorOffset, 0);
 		}
 
-		batch.draw(greenPipeHigh, 0, 0);
-		batch.draw(greenPipeLow, 0, 0);
+		for (Float[] pipeOffset : pipeOffsets) {
+
+			batch.draw(greenPipeHigh, pipeOffset[0], 0);
+			batch.draw(greenPipeLow, pipeOffset[0], 0);
+		}
 
 		bird.Render(batch);
 
@@ -75,6 +81,12 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 
 	public void update (float delta) {
+		pipeSpawnTimer += delta;
+
+		if(pipeSpawnTimer > 5) {
+			spawnPipe();
+			pipeSpawnTimer = 0;
+		}
 
 		// update floor position
         floorOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
@@ -85,7 +97,21 @@ public class MyGdxGame extends ApplicationAdapter {
 			floorOffsets.set(2, floorSprite.getWidth() * 2);
 		}
 
+		// Update pipe positions
+		for (int i = 0; i < pipeOffsets.size(); i++) {
+			Float[] val = pipeOffsets.get(i);
+			val[0] -= 60f * delta;
+			pipeOffsets.set(i, val);
+		}
+
 		bird.Update(delta);
+	}
+
+	private void spawnPipe() {
+		float screenWidth = (float) Gdx.graphics.getWidth();
+		float randomOpening = (float) Gdx.graphics.getHeight() / 2;
+		pipeOffsets.add(new Float[] { screenWidth, randomOpening });
+		System.out.println("spawn pipe");
 	}
 	
 	@Override
