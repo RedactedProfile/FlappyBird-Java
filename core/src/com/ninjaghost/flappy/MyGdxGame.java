@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import java.util.ArrayList;
+
 /**
  * Plan:
  * 1. we should get the infinitely scrolling floor first
@@ -32,6 +34,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	Bird bird;
 
 
+	ArrayList<Integer> floorOffsets = new ArrayList<>();
+
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
@@ -40,6 +44,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		floorSprite = new Sprite(new Texture("sprites/base.png"));
 		greenPipeHigh = new Sprite(new Texture("sprites/pipe-green.png"));
 		greenPipeLow = new Sprite(new Texture("sprites/pipe-green.png")); greenPipeLow.flip(false, true);
+
+		floorOffsets.add(0);
+		floorOffsets.add((int)floorSprite.getWidth());
+		floorOffsets.add((int)floorSprite.getWidth() * 2);
 
 		bird = new Bird();
 	}
@@ -51,7 +59,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.begin();
 
 		batch.draw(backgroundSprite, 0, 0);
-		batch.draw(floorSprite, 0, 0);
+
+		for (int floorOffset : floorOffsets) {
+			batch.draw(floorSprite, floorOffset, 0);
+		}
+
 
 		batch.draw(greenPipeHigh, 0, 0);
 		batch.draw(greenPipeLow, 0, 0);
