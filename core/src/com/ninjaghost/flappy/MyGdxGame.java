@@ -10,11 +10,12 @@ import com.sun.org.slf4j.internal.Logger;
 import com.sun.tools.javac.util.Pair;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Plan:
  * 1. ✔️ we should get the infinitely scrolling floor first
- * 2. let's infinitely spawn some pipe pairs
+ * 2. ✔️ let's infinitely spawn some pipe pairs
  * 3. let's then make the bird fall
  * 4. get some input in to jump the bird up
  * 5. Make things smoother (rotate bird)
@@ -72,12 +73,18 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		float gapSize = 100f;
 		for (Float[] pipeOffset : pipeOffsets) {
+			// offset starts by rendering the pipe at the top of the screen (screen height - pipe height)
+			// 		we then subtract the floor height which gives us a nice baseline
 			float offset = Gdx.graphics.getHeight() - greenPipeHigh.getHeight() + floorSprite.getHeight();
+
+			// Here, we'll add the vertical value provided in this pipeset
+			offset += pipeOffset[1];
+
 			batch.draw(greenPipeHigh, pipeOffset[0], offset);
+
+			// the lower pipe simple needs to render the defined gap size lower and then continue on for however high the sprite is
 			batch.draw(greenPipeLow, pipeOffset[0], offset - greenPipeLow.getHeight() - gapSize);
 		}
-
-//		batch.draw(greenPipeHigh, 60f, Gdx.graphics.getHeight() - greenPipeHigh.getHeight());
 
 		bird.Render(batch);
 
@@ -105,6 +112,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		for (int i = 0; i < pipeOffsets.size(); i++) {
 			Float[] val = pipeOffsets.get(i);
 			val[0] -= 60f * delta;
+
+			// delete if we're off screen
+			if(val[0] < -Gdx.graphics.getWidth()) {
+				pipeOffsets.remove(pipeOffsets.get(i));
+				System.out.println("Deleting pipe at " + val[0].toString() + " pipes left: " + pipeOffsets.size());
+				continue;
+			}
+
 			pipeOffsets.set(i, val);
 		}
 
@@ -113,7 +128,13 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	private void spawnPipe() {
 		float screenWidth = (float) Gdx.graphics.getWidth();
-		float randomOpening = (float) Gdx.graphics.getHeight() / 2;
+
+		// the opening can be a randomized value based on some clamps
+		float randomFloat = (new Random()).nextFloat();
+		float maxLow = -50.0f;
+		float maxHigh = 145.0f;
+		float randomOpening = maxLow + (maxHigh - (maxLow)) * randomFloat;
+
 		pipeOffsets.add(new Float[] { screenWidth, randomOpening });
 		System.out.println("spawn pipe");
 	}
