@@ -56,6 +56,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		bird = new Bird();
 	}
 
+	float offset = 0;
 	@Override
 	public void render () {
 		this.update(Gdx.graphics.getDeltaTime());
@@ -69,11 +70,13 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.draw(floorSprite, floorOffset, 0);
 		}
 
+		float gapSize = 35f;
 		for (Float[] pipeOffset : pipeOffsets) {
-
-			batch.draw(greenPipeHigh, pipeOffset[0], 0);
+			batch.draw(greenPipeHigh, pipeOffset[0], Gdx.graphics.getHeight() - greenPipeHigh.getHeight());
 			batch.draw(greenPipeLow, pipeOffset[0], 0);
 		}
+
+//		batch.draw(greenPipeHigh, 60f, Gdx.graphics.getHeight() - greenPipeHigh.getHeight());
 
 		bird.Render(batch);
 
