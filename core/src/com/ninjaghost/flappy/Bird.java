@@ -3,6 +3,7 @@ package com.ninjaghost.flappy;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 
 import java.util.ArrayList;
 
@@ -30,6 +31,10 @@ public class Bird {
 
     public void Update(float deltaTime) {
 
+    }
+
+    public Rectangle box() {
+        return frames.get(activeFrame).getBoundingRectangle();
     }
 
     public void Render(SpriteBatch spriteBatch) {

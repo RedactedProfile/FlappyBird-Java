@@ -2,31 +2,35 @@ package com.ninjaghost.flappy;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.tools.javac.util.Pair;
-
 import java.util.ArrayList;
 import java.util.Random;
 
+import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
+
 /**
  * Plan:
- * 1. ✔️ we should get the infinitely scrolling floor first
- * 2. ✔️ let's infinitely spawn some pipe pairs
- * 3. ✔️ Background needs to infinitely scroll too
- * 4. let's then make the bird fall
- * 5. get some input in to jump the bird up
- * 6. Make things smoother (rotate bird)
- * 7. "Start menu"
- * 8. "Game over"
- * 9. Counter
+ * ✔️ we should get the infinitely scrolling floor first
+ * ✔️ let's infinitely spawn some pipe pairs
+ * ✔️ Background needs to infinitely scroll too
+ * ✔️ Bird debug move around mode
+ * collision detection for death state
+ * let's then make the bird fall
+ * get some input in to jump the bird up
+ * Make things smoother (rotate bird)
+ * "Start menu"
+ * "Game over"
+ * Counter
  */
 
 
-public class MyGdxGame extends ApplicationAdapter {
+public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	SpriteBatch batch;
 
 	Sprite backgroundSprite;
@@ -38,13 +42,23 @@ public class MyGdxGame extends ApplicationAdapter {
 	Bird bird;
 
 
+	ArrayList<Rectangle> deathBoxes = new ArrayList<>();
 	ArrayList<Float> floorOffsets = new ArrayList<>();
 	ArrayList<Float> bgOffsets = new ArrayList<>();
 	ArrayList<Float[]> pipeOffsets = new ArrayList<>();
 	float pipeSpawnTimer = 0;
 
+	Sprite player;
+
+	// input state
+	boolean iUp = false;
+	boolean iDown = false;
+	boolean iLeft = false;
+	boolean iRight = false;
+
 	@Override
 	public void create () {
+		Gdx.input.setInputProcessor(this);
 		batch = new SpriteBatch();
 
 		backgroundSprite = new Sprite(new Texture("sprites/background-day.png"));
@@ -61,9 +75,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
 		bird = new Bird();
+
+		player = new Sprite(new Texture("sprites/yellowbird-midflap.png"));
 	}
 
-	float offset = 0;
 	@Override
 	public void render () {
 		this.update(Gdx.graphics.getDeltaTime());
@@ -74,7 +89,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		// Draw the background first
 		for (float bgOffset : bgOffsets) {
 			batch.draw(backgroundSprite, bgOffset, 0);
-		}
+		};
 
 		// Draw the ground on top
 		for (float floorOffset : floorOffsets) {
@@ -98,13 +113,16 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
 		// Draw the bird
-		bird.Render(batch);
+//		bird.Render(batch);
+		batch.draw(player, player.getX(), player.getY());
 
 		// Send it home
 		batch.end();
 	}
 
 	public void update (float delta) {
+		deathBoxes.clear(); // empty the death boxes
+
 		pipeSpawnTimer += delta;
 
 		if(pipeSpawnTimer > 5) {
@@ -115,16 +133,20 @@ public class MyGdxGame extends ApplicationAdapter {
 		// update floor position
         floorOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
 		if(floorOffsets.get(0) <= -floorSprite.getWidth()) {
-//			System.out.println("floor cycle");
 			for (int i = 0; i < 3; i++) {
 				floorOffsets.set(i, floorSprite.getWidth() * i);
 			}
 		}
+		// add generic rectangle for floor death
+		deathBoxes.add((new Rectangle()).set(0, 0, floorSprite.getWidth(), floorSprite.getHeight()));
+
+		// add generic rectangle for ceiling death
+		deathBoxes.add((new Rectangle()).set(0, Gdx.graphics.getHeight(), floorSprite.getWidth(), floorSprite.getHeight()));
+
 
 		// update bg positions
 		bgOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
 		if(bgOffsets.get(0) <= -backgroundSprite.getWidth()) {
-//			System.out.println("bg cycle");
 			for (int i = 0; i < 4; i++) {
 				bgOffsets.set(i, backgroundSprite.getWidth() * i);
 			}
@@ -145,7 +167,30 @@ public class MyGdxGame extends ApplicationAdapter {
 			pipeOffsets.set(i, val);
 		}
 
+		// deal with input and calculate new position
 		bird.Update(delta);
+
+		float newX = player.getX();
+		float newY = player.getY();
+		float moveBy = 25f * delta;
+		if(iUp) {
+			newY += moveBy;
+		} else if (iDown) {
+			newY -= moveBy;
+		}
+		if(iLeft) {
+			newX -= moveBy;
+		} else if(iRight) {
+			newX += moveBy;
+		}
+		player.setPosition(newX, newY);
+
+		// collision detection
+		for (Rectangle bbox : deathBoxes) {
+			if(bbox.overlaps(player.getBoundingRectangle())) {
+				System.out.println("Collision");
+			}
+		}
 	}
 
 	private void spawnPipe() {
@@ -172,5 +217,81 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 
 
+	@Override
+	public boolean keyDown(int keycode) {
+		switch (keycode) {
+			case com.badlogic.gdx.Input.Keys.W:
+				iUp = true;
+				break;
+			case com.badlogic.gdx.Input.Keys.S:
+				iDown = true;
+				break;
+			case com.badlogic.gdx.Input.Keys.A:
+				iLeft = true;
+				break;
+			case com.badlogic.gdx.Input.Keys.D:
+				iRight = true;
+				break;
+		}
+
+		return true;
+	}
+
+	@Override
+	public boolean keyUp(int keycode) {
+		switch (keycode) {
+			case com.badlogic.gdx.Input.Keys.W:
+				iUp = false;
+				break;
+			case com.badlogic.gdx.Input.Keys.S:
+				iDown = false;
+				break;
+			case com.badlogic.gdx.Input.Keys.A:
+				iLeft = false;
+				break;
+			case com.badlogic.gdx.Input.Keys.D:
+				iRight = false;
+				break;
+		}
+		return true;
+	}
+
+
+
+
+	@Override
+	public boolean keyTyped(char character) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		return false;
+	}
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY) {
+		return false;
+	}
+
+	@Override
+	public boolean scrolled(float amountX, float amountY) {
+		return false;
+	}
 
 }
