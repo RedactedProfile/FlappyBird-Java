@@ -20,7 +20,7 @@ import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
  * ✔️ let's infinitely spawn some pipe pairs
  * ✔️ Background needs to infinitely scroll too
  * ✔️ Bird debug move around mode
- * collision detection for death state
+ * ✔️ collision detection for death state
  * let's then make the bird fall
  * get some input in to jump the bird up
  * Make things smoother (rotate bird)
@@ -47,6 +47,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	ArrayList<Float> bgOffsets = new ArrayList<>();
 	ArrayList<Float[]> pipeOffsets = new ArrayList<>();
 	float pipeSpawnTimer = 0;
+	float pipeGapSize = 100f;
 
 	Sprite player;
 
@@ -97,7 +98,6 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		}
 
 		// Draw the pipes
-		float gapSize = 100f;
 		for (Float[] pipeOffset : pipeOffsets) {
 			// offset starts by rendering the pipe at the top of the screen (screen height - pipe height)
 			// 		we then subtract the floor height which gives us a nice baseline
@@ -109,7 +109,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			batch.draw(greenPipeHigh, pipeOffset[0], offset);
 
 			// the lower pipe simple needs to render the defined gap size lower and then continue on for however high the sprite is
-			batch.draw(greenPipeLow, pipeOffset[0], offset - greenPipeLow.getHeight() - gapSize);
+			batch.draw(greenPipeLow, pipeOffset[0], offset - greenPipeLow.getHeight() - pipeGapSize);
 		}
 
 		// Draw the bird
@@ -164,7 +164,20 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				continue;
 			}
 
+			// update the pipe offsets
 			pipeOffsets.set(i, val);
+
+			// add death boxes for pipes
+			// offset starts by rendering the pipe at the top of the screen (screen height - pipe height)
+			// 		we then subtract the floor height which gives us a nice baseline
+			float offset = Gdx.graphics.getHeight() - greenPipeHigh.getHeight() + floorSprite.getHeight();
+
+			// Here, we'll add the vertical value provided in this pipeset
+			offset += val[1];
+
+			// create the bounding boxes
+			deathBoxes.add((new Rectangle()).set(val[0], offset, greenPipeHigh.getWidth(), greenPipeHigh.getHeight()));
+			deathBoxes.add((new Rectangle()).set(val[0], offset - greenPipeLow.getHeight() - pipeGapSize, greenPipeLow.getWidth(), greenPipeLow.getHeight()));
 		}
 
 		// deal with input and calculate new position
@@ -172,7 +185,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		float newX = player.getX();
 		float newY = player.getY();
-		float moveBy = 25f * delta;
+		float moveBy = 50f * delta;
 		if(iUp) {
 			newY += moveBy;
 		} else if (iDown) {
