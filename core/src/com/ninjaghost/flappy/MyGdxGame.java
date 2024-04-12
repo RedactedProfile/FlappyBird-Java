@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 /**
  * Plan:
- * 1. we should get the infinitely scrolling floor first
+ * 1. ✔️ we should get the infinitely scrolling floor first
  * 2. let's infinitely spawn some pipe pairs
  * 3. let's then make the bird fall
  * 4. get some input in to jump the bird up
