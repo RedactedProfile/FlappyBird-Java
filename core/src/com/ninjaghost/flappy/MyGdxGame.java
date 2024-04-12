@@ -34,7 +34,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	Bird bird;
 
 
-	ArrayList<Integer> floorOffsets = new ArrayList<>();
+	ArrayList<Float> floorOffsets = new ArrayList<>();
 
 	@Override
 	public void create () {
@@ -45,9 +45,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		greenPipeHigh = new Sprite(new Texture("sprites/pipe-green.png"));
 		greenPipeLow = new Sprite(new Texture("sprites/pipe-green.png")); greenPipeLow.flip(false, true);
 
-		floorOffsets.add(0);
-		floorOffsets.add((int)floorSprite.getWidth());
-		floorOffsets.add((int)floorSprite.getWidth() * 2);
+		floorOffsets.add(0f);
+		floorOffsets.add(floorSprite.getWidth());
+		floorOffsets.add(floorSprite.getWidth() * 2);
 
 		bird = new Bird();
 	}
@@ -55,15 +55,15 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 		this.update(Gdx.graphics.getDeltaTime());
+
 		ScreenUtils.clear(0, 0, 0.75f, 1);
 		batch.begin();
 
 		batch.draw(backgroundSprite, 0, 0);
 
-		for (int floorOffset : floorOffsets) {
+		for (float floorOffset : floorOffsets) {
 			batch.draw(floorSprite, floorOffset, 0);
 		}
-
 
 		batch.draw(greenPipeHigh, 0, 0);
 		batch.draw(greenPipeLow, 0, 0);
@@ -74,6 +74,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 
 	public void update (float delta) {
+
+		// update floor position
+        floorOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
+
 		bird.Update(delta);
 	}
 	
