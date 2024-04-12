@@ -3,9 +3,11 @@ package com.ninjaghost.flappy;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -54,6 +56,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 	boolean cheat_freemove = true; // disables gravity, enables WASD movement
 	boolean cheat_noclip = false; // when enabled, disables collision
+	boolean cheat_drawboxes = true; // when enabled draws the bounding boxes
 
 	// input state
 	boolean iUp = false;
@@ -82,6 +85,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		bird = new Bird();
 
 		player = new Sprite(new Texture("sprites/yellowbird-midflap.png"));
+		player.setPosition(25f, Gdx.graphics.getHeight() / 2);
 	}
 
 	@Override
@@ -122,6 +126,19 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		// Send it home
 		batch.end();
+
+
+		if(cheat_drawboxes) {
+			// DrawBoxes mode, outline in red all the deathboxes in the scene.
+			// Requires a special drawing mode so the previous SpriteBatch needs to be ended first
+			ShapeRenderer shapeRenderer = new ShapeRenderer();
+			shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+			shapeRenderer.setColor(Color.RED);
+			for (Rectangle bbox : deathBoxes) {
+				shapeRenderer.rect(bbox.x, bbox.y, bbox.width, bbox.height);
+			}
+			shapeRenderer.end();
+		}
 	}
 
 	public void update (float delta) {
