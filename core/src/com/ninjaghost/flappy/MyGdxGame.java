@@ -103,7 +103,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	}
 
 	private void respawn() {
-		player.setPosition(25f, Gdx.graphics.getHeight() / 2);
+		player.setPosition(100f, Gdx.graphics.getHeight() / 2);
 		playerDead = false;
 		playerVelocity = 0;
 		pipeSpawnTimer = 0;
