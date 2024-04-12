@@ -31,6 +31,7 @@ import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
  * "Start menu"
  * "Game over"
  * Counter
+ * Make Exe
  */
 
 
@@ -38,7 +39,9 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	SpriteBatch batch;
 
 	Sprite backgroundSprite;
+	float backgroundMovementConst = 20f;
 	Sprite floorSprite;
+	float floorMovementConst = 60f;
 
 	Sprite greenPipeHigh;
 	Sprite greenPipeLow;
@@ -51,9 +54,12 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	ArrayList<Float> bgOffsets = new ArrayList<>();
 	ArrayList<Float[]> pipeOffsets = new ArrayList<>();
 	float pipeSpawnTimer = 0;
-	float pipeGapSize = 100f;
+	float pipeSpawnTimerMax = 4;
+	float pipeGapSize = 85f;
+	float pipeMovementConst = 120f;
 
 	Sprite player;
+	float playerMovementConst = 75f;
 	float playerVelocity = 0;
 	float getPlayerVelocityFactor = 980;
 	float playerJumpStrength = 250;
@@ -69,6 +75,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	boolean iDown = false;
 	boolean iLeft = false;
 	boolean iRight = false;
+	boolean iSpace = false;
 
 	@Override
 	public void create () {
@@ -91,7 +98,16 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		bird = new Bird();
 
 		player = new Sprite(new Texture("sprites/yellowbird-midflap.png"));
+
+		respawn();
+	}
+
+	private void respawn() {
 		player.setPosition(25f, Gdx.graphics.getHeight() / 2);
+		playerDead = false;
+		playerVelocity = 0;
+		pipeSpawnTimer = 0;
+		pipeOffsets.clear();
 	}
 
 	@Override
@@ -151,19 +167,26 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		deathBoxes.clear(); // empty the death boxes
 
 		if(playerDead) {
-			// don't do anything
+
+			// don't do anything until space is hit to respawn
+			if(iSpace) {
+				respawn();
+				iSpace = false;
+				return;
+			}
+
 			return;
 		}
 
 		pipeSpawnTimer += delta;
 
-		if(pipeSpawnTimer > 5) {
+		if(pipeSpawnTimer > pipeSpawnTimerMax) {
 			spawnPipe();
 			pipeSpawnTimer = 0;
 		}
 
 		// update floor position
-        floorOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
+        floorOffsets.replaceAll(aFloat -> aFloat - floorMovementConst * delta);
 		if(floorOffsets.get(0) <= -floorSprite.getWidth()) {
 			for (int i = 0; i < 3; i++) {
 				floorOffsets.set(i, floorSprite.getWidth() * i);
@@ -177,7 +200,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 
 		// update bg positions
-		bgOffsets.replaceAll(aFloat -> aFloat - 60f * delta);
+		bgOffsets.replaceAll(aFloat -> aFloat - backgroundMovementConst * delta);
 		if(bgOffsets.get(0) <= -backgroundSprite.getWidth()) {
 			for (int i = 0; i < 4; i++) {
 				bgOffsets.set(i, backgroundSprite.getWidth() * i);
@@ -187,7 +210,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		// Update pipe positions
 		for (int i = 0; i < pipeOffsets.size(); i++) {
 			Float[] val = pipeOffsets.get(i);
-			val[0] -= 60f * delta;
+			val[0] -= pipeMovementConst * delta;
 
 			// delete if we're off screen
 			if(val[0] < -Gdx.graphics.getWidth()) {
@@ -220,7 +243,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 		if(cheat_freemove) {
 			// FreeMove Mode disables gravity and lets the player move around with WASD. Useful for debugging collision detection.
-			float moveBy = 50f * delta;
+			float moveBy = playerMovementConst * delta;
 			if (iUp) {
 				newY += moveBy;
 			} else if (iDown) {
@@ -233,8 +256,11 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			}
 		} else {
 			// "Gravity" Mode
-
 			playerVelocity += -getPlayerVelocityFactor * delta;
+			if(iSpace) {
+				playerVelocity = playerJumpStrength;
+				iSpace = false;
+			}
 			newY += playerVelocity * delta;
 		}
 
@@ -292,7 +318,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				iRight = true;
 				break;
 			case com.badlogic.gdx.Input.Keys.SPACE:
-				playerVelocity = playerJumpStrength;
+				iSpace = true;
 				break;
 		}
 
