@@ -10,13 +10,9 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.utils.ScreenUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
-import static jdk.internal.org.jline.terminal.spi.TerminalProvider.Stream.Input;
+import java.util.*;
 
 /**
  * Plan:
@@ -50,15 +46,31 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 	Bird bird;
 
+	enum Difficulty {
+		EASY, MEDIUM, HARD
+	};
+	private record Settings(
+			String name,
+			float pipeGap,
+			float pipeSpawnFreq,
+			float pipeMoveFactor
+	) {}
+	Map<Difficulty, Settings> difficultySettingsMap = Map.of(
+			Difficulty.EASY, new Settings("Easy",85f, 4f, 120f),
+			Difficulty.MEDIUM, new Settings("Medium",85f, 4f, 120f),
+			Difficulty.HARD, new Settings("Hard",85f, 1f, 240f)
+	);
+
+	Difficulty difficulty = Difficulty.EASY;
 
 	ArrayList<Rectangle> deathBoxes = new ArrayList<>();
 	ArrayList<Float> floorOffsets = new ArrayList<>();
 	ArrayList<Float> bgOffsets = new ArrayList<>();
 	ArrayList<Float[]> pipeOffsets = new ArrayList<>();
 	float pipeSpawnTimer = 0;
-	float pipeSpawnTimerMax = 4;
-	float pipeGapSize = 85f;
-	float pipeMovementConst = 120f;
+	float pipeSpawnTimerMax = difficultySettingsMap.get(difficulty).pipeSpawnFreq;
+	float pipeGapSize = difficultySettingsMap.get(difficulty).pipeGap;
+	float pipeMovementConst = difficultySettingsMap.get(difficulty).pipeMoveFactor;
 
 	Sprite player;
 	float playerMovementConst = 75f;
@@ -66,6 +78,7 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	float getPlayerVelocityFactor = 980;
 	float playerJumpStrength = 250;
 	boolean playerDead = false;
+	int playerScore = 0;
 
 
 	boolean cheat_freemove = false; // disables gravity, enables WASD movement
@@ -81,6 +94,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 	// UI stuff
 	BitmapFont font;
+
+
 
 	@Override
 	public void create () {

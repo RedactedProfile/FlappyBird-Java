@@ -20,6 +20,7 @@ allprojects {
     apply plugin: "eclipse"
 
     version = '1.0'
+
     ext {
         appName = "FlappyBird"
         gdxVersion = '1.12.1'
@@ -38,6 +39,11 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
         maven { url "https://jitpack.io" }
+    }
+
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = '16'
+        targetCompatibility = '16'
     }
 }
 
@@ -72,7 +78,6 @@ project(":html") {
 
 project(":core") {
     apply plugin: "java-library"
-
 
     dependencies {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
