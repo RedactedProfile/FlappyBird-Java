@@ -2,6 +2,7 @@ package com.ninjaghost.flappy;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -34,18 +35,6 @@ import java.util.*;
 
 
 public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
-	SpriteBatch batch;
-
-	Sprite backgroundSprite;
-	float backgroundMovementConst = 20f;
-	Sprite floorSprite;
-	float floorMovementConst = 60f;
-
-	Sprite greenPipeHigh;
-	Sprite greenPipeLow;
-
-	Bird bird;
-
 	enum Difficulty {
 		EASY, MEDIUM, HARD
 	};
@@ -53,15 +42,29 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 			String name,
 			float pipeGap,
 			float pipeSpawnFreq,
-			float pipeMoveFactor
+			float pipeMoveFactor,
+			float groundMoveFactor,
+			float bgMoveFactor
 	) {}
 	Map<Difficulty, Settings> difficultySettingsMap = Map.of(
-			Difficulty.EASY, new Settings("Easy",85f, 4f, 120f),
-			Difficulty.MEDIUM, new Settings("Medium",85f, 4f, 120f),
-			Difficulty.HARD, new Settings("Hard",85f, 1f, 240f)
+			Difficulty.EASY, new Settings("Easy",85f, 4f, 120f, 60f, 20f),
+			Difficulty.MEDIUM, new Settings("Medium",75f, 3f, 180f, 80f, 40f),
+			Difficulty.HARD, new Settings("Hard",65f, 1.5f, 240f, 120f, 80f)
 	);
 
 	Difficulty difficulty = Difficulty.EASY;
+
+	SpriteBatch batch;
+
+	Sprite backgroundSprite;
+	Sprite floorSprite;
+	float backgroundMovementConst = difficultySettingsMap.get(difficulty).bgMoveFactor;
+	float floorMovementConst = difficultySettingsMap.get(difficulty).groundMoveFactor;
+
+	Sprite greenPipeHigh;
+	Sprite greenPipeLow;
+
+	Bird bird;
 
 	ArrayList<Rectangle> deathBoxes = new ArrayList<>();
 	ArrayList<Float> floorOffsets = new ArrayList<>();
@@ -121,6 +124,14 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		player = new Sprite(new Texture("sprites/yellowbird-midflap.png"));
 
 		respawn();
+	}
+
+	private void applySettings() {
+		pipeSpawnTimerMax = difficultySettingsMap.get(difficulty).pipeSpawnFreq;
+		pipeGapSize = difficultySettingsMap.get(difficulty).pipeGap;
+		pipeMovementConst = difficultySettingsMap.get(difficulty).pipeMoveFactor;
+		backgroundMovementConst = difficultySettingsMap.get(difficulty).bgMoveFactor;
+		floorMovementConst = difficultySettingsMap.get(difficulty).groundMoveFactor;
 	}
 
 	private void respawn() {
@@ -188,13 +199,18 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		batch.begin();
 		font.getData().setScale(1.2f);
 
+		// Show settings
+		font.draw(batch, "Mode: " + difficultySettingsMap.get(difficulty).name, Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 20);
+
 		// Show activated cheats
 		List<String> cheats = new ArrayList<>();
 		if(cheat_freemove) cheats.add(" FreeMove");
 		if(cheat_noclip) cheats.add(" NoClip");
 		if(cheat_drawboxes) cheats.add(" BBoxes");
-		if(!cheats.isEmpty())
+
+		if(!cheats.isEmpty()) {
 			font.draw(batch, "Cheats:\n" + String.join("\n", cheats), Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
+		}
 		batch.end();
 
 	}
@@ -384,6 +400,20 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 				break;
 			case com.badlogic.gdx.Input.Keys.L:
 				cheat_drawboxes = !cheat_drawboxes;
+				break;
+			case Input.Keys.UP:
+				switch (difficulty) {
+					case EASY -> difficulty = Difficulty.MEDIUM;
+					case MEDIUM -> difficulty = Difficulty.HARD;
+                }
+				applySettings();
+				break;
+			case Input.Keys.DOWN:
+				switch (difficulty) {
+					case HARD -> difficulty = Difficulty.MEDIUM;
+					case MEDIUM -> difficulty = Difficulty.EASY;
+				}
+				applySettings();
 				break;
 
 		}
