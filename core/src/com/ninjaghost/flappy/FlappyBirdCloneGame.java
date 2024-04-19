@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -12,6 +13,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.*;
 
@@ -34,7 +37,7 @@ import java.util.*;
  */
 
 
-public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
+public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProcessor {
 	enum Difficulty {
 		EASY, MEDIUM, HARD
 	};
@@ -54,6 +57,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 	Difficulty difficulty = Difficulty.EASY;
 
+	OrthographicCamera camera;
+	Viewport viewport;
 	SpriteBatch batch;
 
 	Sprite backgroundSprite;
@@ -105,6 +110,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 		Gdx.input.setInputProcessor(this);
 		batch = new SpriteBatch();
 		font = new BitmapFont();
+		camera = new OrthographicCamera();
+		viewport = new FitViewport(400, 450, camera);
 
 		backgroundSprite = new Sprite(new Texture("sprites/background-day.png"));
 		floorSprite = new Sprite(new Texture("sprites/base.png"));
@@ -144,6 +151,8 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 
 	@Override
 	public void render () {
+//		camera.update();
+//		batch.setProjectionMatrix(camera.combined);
 		this.update(Gdx.graphics.getDeltaTime());
 
 		ScreenUtils.clear(0, 0, 0.75f, 1);
@@ -380,25 +389,25 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	@Override
 	public boolean keyUp(int keycode) {
 		switch (keycode) {
-			case com.badlogic.gdx.Input.Keys.W:
+			case Input.Keys.W:
 				iUp = false;
 				break;
-			case com.badlogic.gdx.Input.Keys.S:
+			case Input.Keys.S:
 				iDown = false;
 				break;
-			case com.badlogic.gdx.Input.Keys.A:
+			case Input.Keys.A:
 				iLeft = false;
 				break;
-			case com.badlogic.gdx.Input.Keys.D:
+			case Input.Keys.D:
 				iRight = false;
 				break;
-			case com.badlogic.gdx.Input.Keys.J:
+			case Input.Keys.J:
 				cheat_freemove = !cheat_freemove;
 				break;
-			case com.badlogic.gdx.Input.Keys.K:
+			case Input.Keys.K:
 				cheat_noclip = !cheat_noclip;
 				break;
-			case com.badlogic.gdx.Input.Keys.L:
+			case Input.Keys.L:
 				cheat_drawboxes = !cheat_drawboxes;
 				break;
 			case Input.Keys.UP:
@@ -421,7 +430,11 @@ public class MyGdxGame extends ApplicationAdapter implements InputProcessor {
 	}
 
 
-
+	@Override
+	public void resize(int width, int height) {
+//		viewport.update(width, height, true);
+		super.resize(width, height);
+	}
 
 	@Override
 	public boolean keyTyped(char character) {
