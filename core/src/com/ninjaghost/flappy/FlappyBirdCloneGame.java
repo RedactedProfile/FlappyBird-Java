@@ -260,7 +260,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 			batch.begin();
 			if(activeMenu == Menu.START) {
 
-				String titleText = "FlappyBird Clone";
+				String titleText = "FlappyBird Clone \n               by NinjaGhost\n\n\n\nPress Space / Tap to Start";
 				layout.setText(font, titleText);
 				float titleTextWidth = layout.width;
 				float titleTextHeight = layout.height;
