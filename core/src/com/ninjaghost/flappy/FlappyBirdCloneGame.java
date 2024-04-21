@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -29,7 +30,7 @@ import java.util.*;
  * ✔️ get some input in to jump the bird up
  * ✔️ Collision triggers death state
  * ✔️ Able to respawn after death
- * "Start menu"
+ * ✔️ "Start menu"
  * "Game over"
  * Counter
  * Make things smoother (rotate bird)
@@ -42,6 +43,12 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		NONE, MENU, GAME, DEATH
 	}
 	GameState gameState = GameState.NONE;
+
+	enum Menu {
+		NONE, START, DEATH
+	}
+	Menu activeMenu = Menu.NONE;
+
 
 	enum Difficulty {
 		EASY, MEDIUM, HARD
@@ -108,6 +115,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 	// UI stuff
 	BitmapFont font;
+	GlyphLayout layout;
 
 
 
@@ -115,6 +123,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	public void create () {
 		Gdx.input.setInputProcessor(this);
 		batch = new SpriteBatch();
+		layout = new GlyphLayout();
 		font = new BitmapFont();
 		camera = new OrthographicCamera();
 		viewport = new FitViewport(400, 450, camera);
@@ -150,12 +159,12 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 	private void startStartMenu() {
 		gameState = GameState.MENU;
-
-
+		activeMenu = Menu.START;
 	}
 
 	private void startGame() {
 		gameState = GameState.GAME;
+		activeMenu = Menu.NONE;
 		respawn();
 	}
 
@@ -189,59 +198,88 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 			batch.draw(floorSprite, floorOffset, 0);
 		}
 
-		// Draw the pipes
-		for (Float[] pipeOffset : pipeOffsets) {
-			// offset starts by rendering the pipe at the top of the screen (screen height - pipe height)
-			// 		we then subtract the floor height which gives us a nice baseline
-			float offset = Gdx.graphics.getHeight() - greenPipeHigh.getHeight() + floorSprite.getHeight();
-
-			// Here, we'll add the vertical value provided in this pipeset
-			offset += pipeOffset[1];
-
-			batch.draw(greenPipeHigh, pipeOffset[0], offset);
-
-			// the lower pipe simple needs to render the defined gap size lower and then continue on for however high the sprite is
-			batch.draw(greenPipeLow, pipeOffset[0], offset - greenPipeLow.getHeight() - pipeGapSize);
-		}
-
-		// Draw the bird
-//		bird.Render(batch);
-		batch.draw(player, player.getX(), player.getY());
-
-		// Send it home
 		batch.end();
 
+		if(gameState == GameState.GAME || gameState == GameState.DEATH) {
+			batch.begin();
+			// Draw the pipes
+			for (Float[] pipeOffset : pipeOffsets) {
+				// offset starts by rendering the pipe at the top of the screen (screen height - pipe height)
+				// 		we then subtract the floor height which gives us a nice baseline
+				float offset = Gdx.graphics.getHeight() - greenPipeHigh.getHeight() + floorSprite.getHeight();
 
-		if(cheat_drawboxes) {
-			// DrawBoxes mode, outline in red all the deathboxes in the scene.
-			// Requires a special drawing mode so the previous SpriteBatch needs to be ended first
-			ShapeRenderer shapeRenderer = new ShapeRenderer();
-			shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-			shapeRenderer.setColor(Color.RED);
-			for (Rectangle bbox : deathBoxes) {
-				shapeRenderer.rect(bbox.x, bbox.y, bbox.width, bbox.height);
+				// Here, we'll add the vertical value provided in this pipeset
+				offset += pipeOffset[1];
+
+				batch.draw(greenPipeHigh, pipeOffset[0], offset);
+
+				// the lower pipe simple needs to render the defined gap size lower and then continue on for however high the sprite is
+				batch.draw(greenPipeLow, pipeOffset[0], offset - greenPipeLow.getHeight() - pipeGapSize);
 			}
-			shapeRenderer.end();
+
+
+			// Draw the bird
+			// bird.Render(batch);
+			batch.draw(player, player.getX(), player.getY());
+
+			// Send it home
+			batch.end();
+
+
+			if(cheat_drawboxes) {
+				// DrawBoxes mode, outline in red all the deathboxes in the scene.
+				// Requires a special drawing mode so the previous SpriteBatch needs to be ended first
+				ShapeRenderer shapeRenderer = new ShapeRenderer();
+				shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+				shapeRenderer.setColor(Color.RED);
+				for (Rectangle bbox : deathBoxes) {
+					shapeRenderer.rect(bbox.x, bbox.y, bbox.width, bbox.height);
+				}
+				shapeRenderer.end();
+			}
+
+
+			// UI goes on top of everything else so it must be rendered last
+			batch.begin();
+			font.getData().setScale(1.2f);
+
+			// Show settings
+			font.draw(batch, "Mode: " + difficultySettingsMap.get(difficulty).name, Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 20);
+
+			// Show activated cheats
+			List<String> cheats = new ArrayList<>();
+			if(cheat_freemove) cheats.add(" FreeMove");
+			if(cheat_noclip) cheats.add(" NoClip");
+			if(cheat_drawboxes) cheats.add(" BBoxes");
+
+			if(!cheats.isEmpty()) {
+				font.draw(batch, "Cheats:\n" + String.join("\n", cheats), Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
+			}
+			batch.end();
+		} else if (gameState == GameState.MENU) {
+			batch.begin();
+			if(activeMenu == Menu.START) {
+
+				String titleText = "FlappyBird Clone";
+				layout.setText(font, titleText);
+				float titleTextWidth = layout.width;
+				float titleTextHeight = layout.height;
+				float titleTextBottomOffset = 100f;
+
+				font.draw(batch, titleText, ((float) Gdx.graphics.getWidth() / 2) - titleTextWidth / 2, ((float)Gdx.graphics.getHeight() / 2 + titleTextHeight / 2) + titleTextBottomOffset);
+
+			} else if(activeMenu == Menu.DEATH) {
+				String deadText = "You Dead.";
+				layout.setText(font, deadText);
+				float deadTextWidth = layout.width;
+				float deadTextHeight = layout.height;
+				float deadTextBottomOffset = 100f;
+
+				font.draw(batch, deadText, ((float) Gdx.graphics.getWidth() / 2) - deadTextWidth / 2, ((float)Gdx.graphics.getHeight() / 2 + deadTextHeight / 2) + deadTextBottomOffset);
+
+			}
+			batch.end();
 		}
-
-
-		// UI goes on top of everything else so it must be rendered last
-		batch.begin();
-		font.getData().setScale(1.2f);
-
-		// Show settings
-		font.draw(batch, "Mode: " + difficultySettingsMap.get(difficulty).name, Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 20);
-
-		// Show activated cheats
-		List<String> cheats = new ArrayList<>();
-		if(cheat_freemove) cheats.add(" FreeMove");
-		if(cheat_noclip) cheats.add(" NoClip");
-		if(cheat_drawboxes) cheats.add(" BBoxes");
-
-		if(!cheats.isEmpty()) {
-			font.draw(batch, "Cheats:\n" + String.join("\n", cheats), Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
-		}
-		batch.end();
 
 	}
 
@@ -365,8 +403,18 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 			return;
 		} else if(gameState == GameState.MENU) {
 
-			if(iSpace) {
-				startGame();
+			if(activeMenu == Menu.START) {
+				// Start Menu Controls
+
+				if(iSpace) {
+					startGame();
+				}
+			} else if(activeMenu == Menu.DEATH) {
+				// Death menu Controls
+
+				if(iSpace) {
+					startGame();
+				}
 			}
 			return;
 		}
