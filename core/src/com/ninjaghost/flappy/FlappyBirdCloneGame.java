@@ -38,6 +38,11 @@ import java.util.*;
 
 
 public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProcessor {
+	enum GameState {
+		NONE, MENU, GAME, DEATH
+	}
+	GameState gameState = GameState.NONE;
+
 	enum Difficulty {
 		EASY, MEDIUM, HARD
 	};
@@ -86,6 +91,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	float getPlayerVelocityFactor = 980;
 	float playerJumpStrength = 250;
 	boolean playerDead = false;
+	boolean playerCanRespawn = false;
 	int playerScore = 0;
 
 
@@ -130,7 +136,8 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 		player = new Sprite(new Texture("sprites/yellowbird-midflap.png"));
 
-		respawn();
+		startStartMenu();
+//		startGame();
 	}
 
 	private void applySettings() {
@@ -141,18 +148,32 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		floorMovementConst = difficultySettingsMap.get(difficulty).groundMoveFactor;
 	}
 
+	private void startStartMenu() {
+		gameState = GameState.MENU;
+
+
+	}
+
+	private void startGame() {
+		gameState = GameState.GAME;
+		respawn();
+	}
+
+	/**
+	 * Reset the player into a new playable state
+	 */
 	private void respawn() {
-		player.setPosition(100f, Gdx.graphics.getHeight() / 2);
+		player.setPosition(100f, (float) Gdx.graphics.getHeight() / 2);
 		playerDead = false;
 		playerVelocity = 0;
 		pipeSpawnTimer = 0;
+		playerScore = 0;
+		playerCanRespawn = false;
 		pipeOffsets.clear();
 	}
 
 	@Override
 	public void render () {
-//		camera.update();
-//		batch.setProjectionMatrix(camera.combined);
 		this.update(Gdx.graphics.getDeltaTime());
 
 		ScreenUtils.clear(0, 0, 0.75f, 1);
@@ -227,10 +248,10 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	public void update (float delta) {
 		deathBoxes.clear(); // empty the death boxes
 
-		if(playerDead) {
+		if(gameState == GameState.DEATH) {
 
 			// don't do anything until space is hit to respawn
-			if(iSpace) {
+			if(iSpace && playerCanRespawn) {
 				respawn();
 				iSpace = false;
 				return;
@@ -238,105 +259,124 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 			return;
 		}
+		else if(gameState == GameState.GAME) {
 
-		pipeSpawnTimer += delta;
+			// Main Gameplay Loop
 
-		if(pipeSpawnTimer > pipeSpawnTimerMax) {
-			spawnPipe();
-			pipeSpawnTimer = 0;
-		}
+			pipeSpawnTimer += delta;
 
-		// update floor position
-        floorOffsets.replaceAll(aFloat -> aFloat - floorMovementConst * delta);
-		if(floorOffsets.get(0) <= -floorSprite.getWidth()) {
-			for (int i = 0; i < 3; i++) {
-				floorOffsets.set(i, floorSprite.getWidth() * i);
-			}
-		}
-		// add generic rectangle for floor death
-		deathBoxes.add((new Rectangle()).set(0, 0, floorSprite.getWidth(), floorSprite.getHeight()));
-
-		// add generic rectangle for ceiling death
-		deathBoxes.add((new Rectangle()).set(0, Gdx.graphics.getHeight(), floorSprite.getWidth(), floorSprite.getHeight()));
-
-
-		// update bg positions
-		bgOffsets.replaceAll(aFloat -> aFloat - backgroundMovementConst * delta);
-		if(bgOffsets.get(0) <= -backgroundSprite.getWidth()) {
-			for (int i = 0; i < 4; i++) {
-				bgOffsets.set(i, backgroundSprite.getWidth() * i);
-			}
-		}
-
-		// Update pipe positions
-		for (int i = 0; i < pipeOffsets.size(); i++) {
-			Float[] val = pipeOffsets.get(i);
-			val[0] -= pipeMovementConst * delta;
-
-			// delete if we're off screen
-			if(val[0] < -Gdx.graphics.getWidth()) {
-				pipeOffsets.remove(pipeOffsets.get(i));
-				System.out.println("Deleting pipe at " + val[0].toString() + " pipes left: " + pipeOffsets.size());
-				continue;
+			if(pipeSpawnTimer > pipeSpawnTimerMax) {
+				spawnPipe();
+				pipeSpawnTimer = 0;
 			}
 
-			// update the pipe offsets
-			pipeOffsets.set(i, val);
-
-			// add death boxes for pipes
-			// offset starts by rendering the pipe at the top of the screen (screen height - pipe height)
-			// 		we then subtract the floor height which gives us a nice baseline
-			float offset = Gdx.graphics.getHeight() - greenPipeHigh.getHeight() + floorSprite.getHeight();
-
-			// Here, we'll add the vertical value provided in this pipeset
-			offset += val[1];
-
-			// create the bounding boxes
-			deathBoxes.add((new Rectangle()).set(val[0], offset, greenPipeHigh.getWidth(), greenPipeHigh.getHeight()));
-			deathBoxes.add((new Rectangle()).set(val[0], offset - greenPipeLow.getHeight() - pipeGapSize, greenPipeLow.getWidth(), greenPipeLow.getHeight()));
-		}
-
-		// deal with input and calculate new position
-		bird.Update(delta);
-
-		float newX = player.getX();
-		float newY = player.getY();
-
-		if(cheat_freemove) {
-			// FreeMove Mode disables gravity and lets the player move around with WASD. Useful for debugging collision detection.
-			float moveBy = playerMovementConst * delta;
-			if (iUp) {
-				newY += moveBy;
-			} else if (iDown) {
-				newY -= moveBy;
-			}
-			if (iLeft) {
-				newX -= moveBy;
-			} else if (iRight) {
-				newX += moveBy;
-			}
-		} else {
-			// "Gravity" Mode
-			playerVelocity += -getPlayerVelocityFactor * delta;
-			if(iSpace) {
-				playerVelocity = playerJumpStrength;
-				iSpace = false;
-			}
-			newY += playerVelocity * delta;
-		}
-
-		player.setPosition(newX, newY);
-
-		if(!cheat_noclip) {
-			// NoClip Mode disables collision
-			// collision detection
-			for (Rectangle bbox : deathBoxes) {
-				if (bbox.overlaps(player.getBoundingRectangle())) {
-					System.out.println("Collision");
-					playerDead = true;
+			// update floor position
+			floorOffsets.replaceAll(aFloat -> aFloat - floorMovementConst * delta);
+			if(floorOffsets.get(0) <= -floorSprite.getWidth()) {
+				for (int i = 0; i < 3; i++) {
+					floorOffsets.set(i, floorSprite.getWidth() * i);
 				}
 			}
+			// add generic rectangle for floor death
+			deathBoxes.add((new Rectangle()).set(0, 0, floorSprite.getWidth(), floorSprite.getHeight()));
+
+			// add generic rectangle for ceiling death
+			deathBoxes.add((new Rectangle()).set(0, Gdx.graphics.getHeight(), floorSprite.getWidth(), floorSprite.getHeight()));
+
+
+			// update bg positions
+			bgOffsets.replaceAll(aFloat -> aFloat - backgroundMovementConst * delta);
+			if(bgOffsets.get(0) <= -backgroundSprite.getWidth()) {
+				for (int i = 0; i < 4; i++) {
+					bgOffsets.set(i, backgroundSprite.getWidth() * i);
+				}
+			}
+
+			// Update pipe positions
+			for (int i = 0; i < pipeOffsets.size(); i++) {
+				Float[] val = pipeOffsets.get(i);
+				val[0] -= pipeMovementConst * delta;
+
+				// delete if we're off screen
+				if(val[0] < -Gdx.graphics.getWidth()) {
+					pipeOffsets.remove(pipeOffsets.get(i));
+					System.out.println("Deleting pipe at " + val[0].toString() + " pipes left: " + pipeOffsets.size());
+					continue;
+				}
+
+				// update the pipe offsets
+				pipeOffsets.set(i, val);
+
+				// add death boxes for pipes
+				// offset starts by rendering the pipe at the top of the screen (screen height - pipe height)
+				// 		we then subtract the floor height which gives us a nice baseline
+				float offset = Gdx.graphics.getHeight() - greenPipeHigh.getHeight() + floorSprite.getHeight();
+
+				// Here, we'll add the vertical value provided in this pipeset
+				offset += val[1];
+
+				// create the bounding boxes
+				deathBoxes.add((new Rectangle()).set(val[0], offset, greenPipeHigh.getWidth(), greenPipeHigh.getHeight()));
+				deathBoxes.add((new Rectangle()).set(val[0], offset - greenPipeLow.getHeight() - pipeGapSize, greenPipeLow.getWidth(), greenPipeLow.getHeight()));
+			}
+
+			// deal with input and calculate new position
+			bird.Update(delta);
+
+			float newX = player.getX();
+			float newY = player.getY();
+
+			if(cheat_freemove) {
+				// FreeMove Mode disables gravity and lets the player move around with WASD. Useful for debugging collision detection.
+				float moveBy = playerMovementConst * delta;
+				if (iUp) {
+					newY += moveBy;
+				} else if (iDown) {
+					newY -= moveBy;
+				}
+				if (iLeft) {
+					newX -= moveBy;
+				} else if (iRight) {
+					newX += moveBy;
+				}
+			} else {
+				// "Gravity" Mode
+				playerVelocity += -getPlayerVelocityFactor * delta;
+				if(iSpace) {
+					playerVelocity = playerJumpStrength;
+					iSpace = false;
+				}
+				newY += playerVelocity * delta;
+			}
+
+			player.setPosition(newX, newY);
+
+			if(!cheat_noclip) {
+				// NoClip Mode disables collision
+				// collision detection
+				for (Rectangle bbox : deathBoxes) {
+					if (bbox.overlaps(player.getBoundingRectangle())) {
+						System.out.println("Collision");
+						triggerDeath();
+					}
+				}
+			}
+
+			return;
+		} else if(gameState == GameState.MENU) {
+
+			if(iSpace) {
+				startGame();
+			}
+			return;
 		}
+	}
+
+	private void triggerDeath() {
+		// let the player bird react
+		playerDead = true;
+		playerCanRespawn = false;
+		gameState = GameState.DEATH;
 	}
 
 	private void spawnPipe() {
