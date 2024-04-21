@@ -31,7 +31,7 @@ import java.util.*;
  * ✔️ Collision triggers death state
  * ✔️ Able to respawn after death
  * ✔️ "Start menu"
- * "Game over"
+ * ✔️ "Game over"
  * Counter
  * Make things smoother (rotate bird)
  * Make Exe
@@ -52,7 +52,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 	enum Difficulty {
 		EASY, MEDIUM, HARD
-	};
+	}
 	private record Settings(
 			String name,
 			float pipeGap,
@@ -97,6 +97,8 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	float playerVelocity = 0;
 	float getPlayerVelocityFactor = 980;
 	float playerJumpStrength = 250;
+	float playerDeathTimer = 0;
+	float playerDeathTimerMax = 4.0f;
 	boolean playerDead = false;
 	boolean playerCanRespawn = false;
 	int playerScore = 0;
@@ -173,12 +175,14 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	 */
 	private void respawn() {
 		player.setPosition(100f, (float) Gdx.graphics.getHeight() / 2);
-		playerDead = false;
 		playerVelocity = 0;
 		pipeSpawnTimer = 0;
 		playerScore = 0;
+		playerDeathTimer = 0;
+		playerDead = false;
 		playerCanRespawn = false;
 		pipeOffsets.clear();
+		gameState = GameState.GAME;
 	}
 
 	@Override
@@ -191,7 +195,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		// Draw the background first
 		for (float bgOffset : bgOffsets) {
 			batch.draw(backgroundSprite, bgOffset, 0);
-		};
+		}
 
 		// Draw the ground on top
 		for (float floorOffset : floorOffsets) {
@@ -256,6 +260,37 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 				font.draw(batch, "Cheats:\n" + String.join("\n", cheats), Gdx.graphics.getWidth() - 100, Gdx.graphics.getHeight() - 50);
 			}
 			batch.end();
+
+
+			if(playerDead) {
+				batch.begin();
+				/// This may get moved out into the main loop
+				// as the death message could show up the instant
+				// the player hits something. Keep this in mind.
+				String deadText = "You Dead.";
+				layout.setText(font, deadText);
+				float deadTextWidth = layout.width;
+				float deadTextHeight = layout.height;
+				float deadTextBottomOffset = 100f;
+
+				font.draw(batch, deadText, ((float) Gdx.graphics.getWidth() / 2) - deadTextWidth / 2, ((float)Gdx.graphics.getHeight() / 2 + deadTextHeight / 2) + deadTextBottomOffset);
+
+				if(playerCanRespawn) {
+					String respawnText = "Press space to try again";
+					layout.setText(font, respawnText);
+					float respawnTextWidth = layout.width;
+					float respawnTextHeight = layout.height;
+					float respawnTextBottomOffset = 50f;
+
+					font.draw(batch, respawnText, ((float) Gdx.graphics.getWidth() / 2) - respawnTextWidth / 2, ((float)Gdx.graphics.getHeight() / 2 + respawnTextHeight / 2) + respawnTextBottomOffset);
+
+				}
+
+				batch.end();
+			}
+
+
+
 		} else if (gameState == GameState.MENU) {
 			batch.begin();
 			if(activeMenu == Menu.START) {
@@ -268,16 +303,11 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 				font.draw(batch, titleText, ((float) Gdx.graphics.getWidth() / 2) - titleTextWidth / 2, ((float)Gdx.graphics.getHeight() / 2 + titleTextHeight / 2) + titleTextBottomOffset);
 
-			} else if(activeMenu == Menu.DEATH) {
-				String deadText = "You Dead.";
-				layout.setText(font, deadText);
-				float deadTextWidth = layout.width;
-				float deadTextHeight = layout.height;
-				float deadTextBottomOffset = 100f;
-
-				font.draw(batch, deadText, ((float) Gdx.graphics.getWidth() / 2) - deadTextWidth / 2, ((float)Gdx.graphics.getHeight() / 2 + deadTextHeight / 2) + deadTextBottomOffset);
-
 			}
+//			else if(activeMenu == Menu.DEATH) {
+//
+//
+//			}
 			batch.end();
 		}
 
@@ -288,14 +318,21 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 		if(gameState == GameState.DEATH) {
 
-			// don't do anything until space is hit to respawn
+			if(!playerCanRespawn) {
+				playerDeathTimer += delta;
+				if(playerDeathTimer > playerDeathTimerMax) {
+					playerCanRespawn = true;
+				}
+			}
+
+			// don't do anything until space is hit to respawn but only when the player CAN respawn
 			if(iSpace && playerCanRespawn) {
 				respawn();
 				iSpace = false;
-				return;
+//				return;
 			}
 
-			return;
+//			return;
 		}
 		else if(gameState == GameState.GAME) {
 
@@ -400,7 +437,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 				}
 			}
 
-			return;
+//			return;
 		} else if(gameState == GameState.MENU) {
 
 			if(activeMenu == Menu.START) {
@@ -416,7 +453,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 					startGame();
 				}
 			}
-			return;
+//			return;
 		}
 	}
 
