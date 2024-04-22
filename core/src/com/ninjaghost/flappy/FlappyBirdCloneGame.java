@@ -88,6 +88,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	Bird bird;
 
 	ArrayList<Rectangle> deathBoxes = new ArrayList<>();
+	ArrayList<Rectangle> scoreBoxes = new ArrayList<>();
 	ArrayList<Float> floorOffsets = new ArrayList<>();
 	ArrayList<Float> bgOffsets = new ArrayList<>();
 	ArrayList<Float[]> pipeOffsets = new ArrayList<>();
@@ -364,9 +365,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 			newX -= delta * 25;
 
 			player.setPosition(newX, newY);
-//			player.setRotation((float) (player.getRotation() + 2.25 * delta));
 			player.rotate(5);
-
 
 			if(!playerCanRespawn) {
 				playerDeathTimer += delta;
@@ -385,6 +384,11 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 			// Main Gameplay Loop
 
 			pipeSpawnTimer += delta;
+
+			iUp = Gdx.input.isKeyPressed(Input.Keys.W);
+			iDown = Gdx.input.isKeyPressed(Input.Keys.S);
+			iLeft = Gdx.input.isKeyPressed(Input.Keys.A);
+			iRight = Gdx.input.isKeyPressed(Input.Keys.D);
 
 			if(pipeSpawnTimer > pipeSpawnTimerMax) {
 				spawnPipe();
@@ -542,18 +546,18 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	@Override
 	public boolean keyDown(int keycode) {
 		switch (keycode) {
-			case com.badlogic.gdx.Input.Keys.W:
-				iUp = true;
-				break;
-			case com.badlogic.gdx.Input.Keys.S:
-				iDown = true;
-				break;
-			case com.badlogic.gdx.Input.Keys.A:
-				iLeft = true;
-				break;
-			case com.badlogic.gdx.Input.Keys.D:
-				iRight = true;
-				break;
+//			case com.badlogic.gdx.Input.Keys.W:
+//				iUp = true;
+//				break;
+//			case com.badlogic.gdx.Input.Keys.S:
+//				iDown = true;
+//				break;
+//			case com.badlogic.gdx.Input.Keys.A:
+//				iLeft = true;
+//				break;
+//			case com.badlogic.gdx.Input.Keys.D:
+//				iRight = true;
+//				break;
 			case com.badlogic.gdx.Input.Keys.SPACE:
 				iSpace = true;
 				break;
@@ -565,18 +569,18 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	@Override
 	public boolean keyUp(int keycode) {
 		switch (keycode) {
-			case Input.Keys.W:
-				iUp = false;
-				break;
-			case Input.Keys.S:
-				iDown = false;
-				break;
-			case Input.Keys.A:
-				iLeft = false;
-				break;
-			case Input.Keys.D:
-				iRight = false;
-				break;
+//			case Input.Keys.W:
+//				iUp = false;
+//				break;
+//			case Input.Keys.S:
+//				iDown = false;
+//				break;
+//			case Input.Keys.A:
+//				iLeft = false;
+//				break;
+//			case Input.Keys.D:
+//				iRight = false;
+//				break;
 			case Input.Keys.J:
 				cheat_freemove = !cheat_freemove;
 				break;
