@@ -328,11 +328,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 			// don't do anything until space is hit to respawn but only when the player CAN respawn
 			if(iSpace && playerCanRespawn) {
 				respawn();
-				iSpace = false;
-//				return;
 			}
-
-//			return;
 		}
 		else if(gameState == GameState.GAME) {
 
@@ -436,8 +432,6 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 					}
 				}
 			}
-
-//			return;
 		} else if(gameState == GameState.MENU) {
 
 			if(activeMenu == Menu.START) {
@@ -453,8 +447,15 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 					startGame();
 				}
 			}
-//			return;
 		}
+
+		// reset keystate
+		iSpace = false;
+		iLeft = false;
+		iDown = false;
+		iRight = false;
+		iUp = false;
+
 	}
 
 	private void triggerDeath() {
