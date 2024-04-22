@@ -32,6 +32,9 @@ import java.util.*;
  * ✔️ Able to respawn after death
  * ✔️ "Start menu"
  * ✔️ "Game over"
+ * ✔️ Respawnable
+ * Death Sequence
+ * GUI Bar
  * Counter
  * Make things smoother (rotate bird)
  * Make Exe
@@ -102,6 +105,8 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	boolean playerDead = false;
 	boolean playerCanRespawn = false;
 	int playerScore = 0;
+	int playerHighScore = 0;
+	int playerLastScore = 0;
 
 
 	boolean cheat_freemove = false; // disables gravity, enables WASD movement
@@ -190,6 +195,8 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		this.update(Gdx.graphics.getDeltaTime());
 
 		ScreenUtils.clear(0, 0, 0.75f, 1);
+		ShapeRenderer shapeRenderer = new ShapeRenderer();
+
 		batch.begin();
 
 		// Draw the background first
@@ -203,6 +210,10 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		}
 
 		batch.end();
+
+
+		// reset font scale
+		font.getData().setScale(1.0f);
 
 		if(gameState == GameState.GAME || gameState == GameState.DEATH) {
 			batch.begin();
@@ -233,7 +244,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 			if(cheat_drawboxes) {
 				// DrawBoxes mode, outline in red all the deathboxes in the scene.
 				// Requires a special drawing mode so the previous SpriteBatch needs to be ended first
-				ShapeRenderer shapeRenderer = new ShapeRenderer();
+
 				shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 				shapeRenderer.setColor(Color.RED);
 				for (Rectangle bbox : deathBoxes) {
@@ -289,8 +300,6 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 				batch.end();
 			}
 
-
-
 		} else if (gameState == GameState.MENU) {
 			batch.begin();
 			if(activeMenu == Menu.START) {
@@ -310,6 +319,30 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 //			}
 			batch.end();
 		}
+
+		// Render the UI bar atop the floor tiles
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		shapeRenderer.setColor(new Color(100f / 255, 149f / 255, 237f / 255, 255f / 255));
+		shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight() * 0.08f);
+		shapeRenderer.end();
+
+		batch.begin();
+		font.getData().setScale(1.2f);
+
+		String scoreText = "Score: " + playerScore;
+		String lastScoreText = "Last: " + playerLastScore;
+		String highScoreText = "High: " + playerHighScore;
+		layout.setText(font, scoreText);
+		float scoreTextWidth = layout.width;
+		layout.setText(font, lastScoreText);
+		float lastScoreTextWidth = layout.width;
+		layout.setText(font, highScoreText);
+		float highScoreTextWidth = layout.width;
+
+		font.draw(batch, scoreText, 15, 25);
+		font.draw(batch, lastScoreText, ((float)Gdx.graphics.getWidth() / 2) - (lastScoreTextWidth / 2), 25);
+		font.draw(batch, highScoreText, Gdx.graphics.getWidth() - highScoreTextWidth - 15, 25);
+		batch.end();
 
 	}
 
