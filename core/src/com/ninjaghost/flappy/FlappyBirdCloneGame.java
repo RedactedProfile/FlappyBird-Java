@@ -12,7 +12,6 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -36,7 +35,7 @@ import java.util.*;
  * ✔️ Respawnable
  * ✔️ Death Sequence
  * ✔️ GUI Bar
- * Counter
+ * ✔️ Counter
  * Make things smoother (rotate bird)
  * Make Exe
  */
@@ -104,8 +103,11 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	float playerJumpStrength = 250;
 	float playerDeathTimer = 0;
 	float playerDeathTimerMax = 2.0f;
+	float playerLastScoreTimer = 0;					// when the player hits a score gate, they cant score again until
+	float playerLastScoreTimerMax = 1.0f;			// the timer reaches this threshhold
 	boolean playerDead = false;
 	boolean playerCanRespawn = false;
+	boolean playerCanScore = false;
 	int playerScore = 0;
 	int playerHighScore = 0;
 	int playerLastScore = 0;
@@ -170,6 +172,8 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	private void startStartMenu() {
 		gameState = GameState.MENU;
 		activeMenu = Menu.START;
+		playerCanScore = true;
+		playerLastScoreTimer = 0;
 	}
 
 	private void startGame() {
@@ -186,12 +190,19 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		player.setRotation(0);
 		playerVelocity = 0;
 		pipeSpawnTimer = 0;
-		playerScore = 0;
 		playerDeathTimer = 0;
+		playerLastScoreTimer = 0;
+		playerCanScore = true;
 		playerDead = false;
 		playerCanRespawn = false;
 		pipeOffsets.clear();
 		gameState = GameState.GAME;
+
+		playerLastScore = playerScore;
+		if(playerLastScore > playerHighScore) {
+			playerHighScore = playerLastScore;
+		}
+		playerScore = 0;
 	}
 
 	@Override
@@ -255,11 +266,15 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 				for (Rectangle bbox : deathBoxes) {
 					shapeRenderer.rect(bbox.x, bbox.y, bbox.width, bbox.height);
 				}
+				shapeRenderer.setColor(Color.BLUE);
+				for (Rectangle bbox : scoreBoxes) {
+					shapeRenderer.rect(bbox.x, bbox.y, bbox.width, bbox.height);
+				}
 				shapeRenderer.end();
 			}
 
 
-			// UI goes on top of everything else so it must be rendered last
+			// UI goes on top of everything else, so it must be rendered last
 			batch.begin();
 			font.getData().setScale(1.2f);
 
@@ -353,6 +368,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 	public void update (float delta) {
 		deathBoxes.clear(); // empty the death boxes
+		scoreBoxes.clear();
 
 		if(gameState == GameState.DEATH) {
 
@@ -393,6 +409,14 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 			if(pipeSpawnTimer > pipeSpawnTimerMax) {
 				spawnPipe();
 				pipeSpawnTimer = 0;
+			}
+
+			// score update
+			if(!playerCanScore) {
+				playerLastScoreTimer += delta;
+				if(playerLastScoreTimer > playerLastScoreTimerMax) {
+					playerCanScore = true;
+				}
 			}
 
 			// update floor position
@@ -443,6 +467,9 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 				// create the bounding boxes
 				deathBoxes.add((new Rectangle()).set(val[0], offset, greenPipeHigh.getWidth(), greenPipeHigh.getHeight()));
 				deathBoxes.add((new Rectangle()).set(val[0], offset - greenPipeLow.getHeight() - pipeGapSize, greenPipeLow.getWidth(), greenPipeLow.getHeight()));
+				if(playerCanScore) {
+					scoreBoxes.add((new Rectangle()).set(val[0] + greenPipeHigh.getWidth(), offset - pipeGapSize, 2.0f, pipeGapSize));
+				}
 			}
 
 			// deal with input and calculate new position
@@ -485,6 +512,13 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 						triggerDeath();
 					}
 				}
+				for (Rectangle bbox : scoreBoxes) {
+					if (bbox.overlaps(player.getBoundingRectangle())) {
+						System.out.println("Score");
+						triggerScore();
+					}
+				}
+
 			}
 		} else if(gameState == GameState.MENU) {
 
@@ -519,6 +553,12 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		gameState = GameState.DEATH;
 	}
 
+	private void triggerScore() {
+		playerScore++;
+		playerLastScoreTimer = 0;
+		playerCanScore = false;
+	}
+
 	private void spawnPipe() {
 		float screenWidth = (float) Gdx.graphics.getWidth();
 
@@ -545,23 +585,9 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 	@Override
 	public boolean keyDown(int keycode) {
-		switch (keycode) {
-//			case com.badlogic.gdx.Input.Keys.W:
-//				iUp = true;
-//				break;
-//			case com.badlogic.gdx.Input.Keys.S:
-//				iDown = true;
-//				break;
-//			case com.badlogic.gdx.Input.Keys.A:
-//				iLeft = true;
-//				break;
-//			case com.badlogic.gdx.Input.Keys.D:
-//				iRight = true;
-//				break;
-			case com.badlogic.gdx.Input.Keys.SPACE:
-				iSpace = true;
-				break;
-		}
+        if (keycode == Input.Keys.SPACE) {
+            iSpace = true;
+        }
 
 		return true;
 	}
@@ -569,18 +595,6 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	@Override
 	public boolean keyUp(int keycode) {
 		switch (keycode) {
-//			case Input.Keys.W:
-//				iUp = false;
-//				break;
-//			case Input.Keys.S:
-//				iDown = false;
-//				break;
-//			case Input.Keys.A:
-//				iLeft = false;
-//				break;
-//			case Input.Keys.D:
-//				iRight = false;
-//				break;
 			case Input.Keys.J:
 				cheat_freemove = !cheat_freemove;
 				break;
