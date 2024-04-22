@@ -332,8 +332,8 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		String scoreText = "Score: " + playerScore;
 		String lastScoreText = "Last: " + playerLastScore;
 		String highScoreText = "High: " + playerHighScore;
-		layout.setText(font, scoreText);
-		float scoreTextWidth = layout.width;
+//		layout.setText(font, scoreText);
+//		float scoreTextWidth = layout.width;
 		layout.setText(font, lastScoreText);
 		float lastScoreTextWidth = layout.width;
 		layout.setText(font, highScoreText);
