@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -33,7 +34,7 @@ import java.util.*;
  * ✔️ "Start menu"
  * ✔️ "Game over"
  * ✔️ Respawnable
- * Death Sequence
+ * ✔️ Death Sequence
  * ✔️ GUI Bar
  * Counter
  * Make things smoother (rotate bird)
@@ -101,7 +102,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	float getPlayerVelocityFactor = 980;
 	float playerJumpStrength = 250;
 	float playerDeathTimer = 0;
-	float playerDeathTimerMax = 4.0f;
+	float playerDeathTimerMax = 2.0f;
 	boolean playerDead = false;
 	boolean playerCanRespawn = false;
 	int playerScore = 0;
@@ -151,6 +152,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		bird = new Bird();
 
 		player = new Sprite(new Texture("sprites/yellowbird-midflap.png"));
+		player.setOrigin(player.getWidth() / 2, player.getHeight() / 2);
 
 		startStartMenu();
 //		startGame();
@@ -180,6 +182,7 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 	 */
 	private void respawn() {
 		player.setPosition(100f, (float) Gdx.graphics.getHeight() / 2);
+		player.setRotation(0);
 		playerVelocity = 0;
 		pipeSpawnTimer = 0;
 		playerScore = 0;
@@ -235,7 +238,8 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 
 			// Draw the bird
 			// bird.Render(batch);
-			batch.draw(player, player.getX(), player.getY());
+//			batch.draw(player, player.getX(), player.getY());
+			player.draw(batch);
 
 			// Send it home
 			batch.end();
@@ -350,6 +354,19 @@ public class FlappyBirdCloneGame extends ApplicationAdapter implements InputProc
 		deathBoxes.clear(); // empty the death boxes
 
 		if(gameState == GameState.DEATH) {
+
+			// "Gravity" Mode
+			float newX = player.getX();
+			float newY = player.getY();
+
+			playerVelocity += -getPlayerVelocityFactor * delta;
+			newY += playerVelocity * delta;
+			newX -= delta * 25;
+
+			player.setPosition(newX, newY);
+//			player.setRotation((float) (player.getRotation() + 2.25 * delta));
+			player.rotate(5);
+
 
 			if(!playerCanRespawn) {
 				playerDeathTimer += delta;
