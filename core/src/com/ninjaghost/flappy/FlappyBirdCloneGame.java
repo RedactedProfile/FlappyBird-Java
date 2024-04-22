@@ -34,7 +34,7 @@ import java.util.*;
  * ✔️ "Game over"
  * ✔️ Respawnable
  * Death Sequence
- * GUI Bar
+ * ✔️ GUI Bar
  * Counter
  * Make things smoother (rotate bird)
  * Make Exe
